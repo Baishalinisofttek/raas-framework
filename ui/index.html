@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RaaS — SQL Restore-as-a-Service</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🗄️</div>
+      <div class="logo-text">
+        <div class="logo-title">RaaS Platform</div>
+        <div class="logo-sub">SQL Restore-as-a-Service</div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="nav-section-label">Overview</div>
+      <a href="#" data-view="dashboard" class="nav-link active">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+
+      <div class="nav-section-label">Operations</div>
+      <a href="#" data-view="new-restore" class="nav-link">
+        <span class="nav-icon">➕</span> New Restore
+      </a>
+      <a href="#" data-view="jobs" class="nav-link">
+        <span class="nav-icon">⚙️</span> Restore Jobs
+        <span id="pending-badge" class="badge awaitingapproval hidden" style="margin-left:auto;font-size:10px;"></span>
+      </a>
+
+      <div class="nav-section-label">Monitoring</div>
+      <a href="#" data-view="alerts" class="nav-link">
+        <span class="nav-icon">🔔</span> Alerts
+        <span id="alert-badge" class="badge critical hidden" style="margin-left:auto;font-size:10px;"></span>
+      </a>
+      <a href="#" data-view="audit" class="nav-link">
+        <span class="nav-icon">📋</span> Audit Log
+      </a>
+
+      <div class="nav-section-label">Intelligence</div>
+      <a href="#" data-view="agent" class="nav-link">
+        <span class="nav-icon">🤖</span> AI Agent
+      </a>
+
+      <div class="nav-section-label">System</div>
+      <a href="#" data-view="settings" class="nav-link">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar-sm">DB</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">dba@company.com</div>
+        <div class="sidebar-user-role">DBA Administrator</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══════════════════════════════════════════════════════════════ -->
+  <div id="main">
+
+    <header id="header">
+      <div class="header-left">
+        <h1 id="view-title">Dashboard</h1>
+      </div>
+      <div class="header-right">
+        <span class="header-time" id="header-clock"></span>
+        <span id="api-status" class="badge info">Connecting…</span>
+        <a href="http://localhost:8080/docs" target="_blank" class="btn btn-ghost btn-small">API Docs ↗</a>
+      </div>
+    </header>
+
+    <main id="content">
+
+      <!-- ══ DASHBOARD ════════════════════════════════════════════════════ -->
+      <section id="view-dashboard" class="view">
+
+        <div class="kpi-grid">
+          <div class="kpi-card accent-teal">
+            <div class="kpi-icon">🔄</div>
+            <div class="label">Total Restores</div>
+            <div class="value" id="kpi-total">—</div>
+            <div class="delta">All time</div>
+          </div>
+          <div class="kpi-card accent-green">
+            <div class="kpi-icon">✅</div>
+            <div class="label">Success Rate</div>
+            <div class="value" id="kpi-success">—</div>
+            <div class="delta">Completed vs Failed</div>
+          </div>
+          <div class="kpi-card accent-sky">
+            <div class="kpi-icon">⏱️</div>
+            <div class="label">Avg Duration</div>
+            <div class="value" id="kpi-duration">—</div>
+            <div class="delta">Completed jobs</div>
+          </div>
+          <div class="kpi-card accent-orange">
+            <div class="kpi-icon">🔔</div>
+            <div class="label">Active Alerts</div>
+            <div class="value" id="kpi-alerts">—</div>
+            <div class="delta">Space / Health</div>
+          </div>
+          <div class="kpi-card accent-violet">
+            <div class="kpi-icon">⏳</div>
+            <div class="label">Pending Approval</div>
+            <div class="value" id="kpi-pending">—</div>
+            <div class="delta">Awaiting action</div>
+          </div>
+          <div class="kpi-card accent-green">
+            <div class="kpi-icon">🖥️</div>
+            <div class="label">Server Health</div>
+            <div class="value" id="kpi-health">—</div>
+            <div class="delta">of monitored fleet</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:22px;">
+          <div class="card">
+            <div class="card-header">
+              Server Fleet
+              <button class="btn btn-secondary btn-small" onclick="app.loadDashboard()">↺ Refresh</button>
+            </div>
+            <div id="server-grid"><div class="empty-state"><div class="spinner"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header">Active Jobs</div>
+            <div id="active-jobs-list"><div class="empty-state"><div class="icon">✅</div><p>No active jobs</p></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Recent Restore Jobs</div>
+          <div id="recent-jobs-table"><div class="empty-state"><div class="spinner"></div></div></div>
+        </div>
+
+      </section>
+
+      <!-- ══ NEW RESTORE ═════════════════════════════════════════════════ -->
+      <section id="view-new-restore" class="view hidden">
+        <div class="card">
+          <div class="card-header">
+            <span>🚀 Submit Restore Request</span>
+          </div>
+          <div id="restore-form-feedback"></div>
+          <form id="restore-form" onsubmit="app.submitRestoreForm(event)">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="source-server">Source Server *</label>
+                <select id="source-server" required>
+                  <option value="">Select source server…</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="target-server">Target Server *</label>
+                <select id="target-server" required>
+                  <option value="">Select target server…</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="database-name">Database Name *</label>
+                <input type="text" id="database-name" placeholder="e.g. OrdersDB"
+                       pattern="^[A-Za-z0-9_\-]{1,128}$" required />
+              </div>
+              <div class="form-group">
+                <label for="restore-type">Restore Type</label>
+                <select id="restore-type">
+                  <option value="Full" selected>Full Restore</option>
+                  <option value="Differential">Differential</option>
+                  <option value="Log">Transaction Log</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="schedule-type">Schedule</label>
+                <select id="schedule-type" onchange="app.toggleScheduleTime()">
+                  <option value="Immediate" selected>Immediate</option>
+                  <option value="Scheduled">Scheduled</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="scheduled-time">Scheduled Time</label>
+                <input type="datetime-local" id="scheduled-time" disabled />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="requestor">Requestor Email *</label>
+              <input type="email" id="requestor" value="dba@company.com" required />
+            </div>
+
+            <div class="form-group">
+              <label for="justification">Business Justification *</label>
+              <textarea id="justification" rows="4"
+                placeholder="Describe the business reason for this restore (min. 30 characters)…"
+                minlength="30" required></textarea>
+            </div>
+
+            <div class="gov-checklist-box">
+              <div class="gov-checklist-title">📋 Governance Checklist</div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="gov1" />
+                <label for="gov1" style="font-weight:400;color:var(--text-secondary);text-transform:none;letter-spacing:0;">
+                  I have verified the target server is in the correct environment tier
+                </label>
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="gov2" />
+                <label for="gov2" style="font-weight:400;color:var(--text-secondary);text-transform:none;letter-spacing:0;">
+                  A valid change ticket or approval exists for this restore
+                </label>
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="gov3" />
+                <label for="gov3" style="font-weight:400;color:var(--text-secondary);text-transform:none;letter-spacing:0;">
+                  Impacted teams have been notified of potential downtime
+                </label>
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="gov4" />
+                <label for="gov4" style="font-weight:400;color:var(--text-secondary);text-transform:none;letter-spacing:0;">
+                  I understand existing target database data may be overwritten
+                </label>
+              </div>
+              <div class="divider"></div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="overwrite-existing" />
+                <label for="overwrite-existing" style="font-weight:500;color:var(--warning);text-transform:none;letter-spacing:0;">
+                  ⚠️ Overwrite existing database on target (if present)
+                </label>
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="governance-ack" required />
+                <label for="governance-ack" style="font-weight:700;color:var(--teal);text-transform:none;letter-spacing:0;">
+                  ✔ I acknowledge and accept all governance requirements above *
+                </label>
+              </div>
+            </div>
+
+            <div class="flex gap-2 mt-2">
+              <button type="submit" class="btn btn-primary" id="submit-restore-btn">
+                🚀 Submit Restore Request
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="app.clearForm()">Clear</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ══ JOBS ════════════════════════════════════════════════════════ -->
+      <section id="view-jobs" class="view hidden">
+        <div class="card">
+          <div class="card-header">
+            Restore Jobs
+            <div class="flex gap-2 items-center">
+              <select id="jobs-filter" onchange="app.filterJobs()" style="width:auto;padding:8px 14px;">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="AwaitingApproval">Awaiting Approval</option>
+                <option value="Approved">Approved</option>
+                <option value="Running">Running</option>
+                <option value="Completed">Completed</option>
+                <option value="Failed">Failed</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <button class="btn btn-secondary btn-small" onclick="app.loadJobs()">↺ Refresh</button>
+            </div>
+          </div>
+          <div id="jobs-table-container"><div class="empty-state"><div class="spinner"></div></div></div>
+        </div>
+
+        <div id="job-detail-panel" class="card hidden">
+          <div class="card-header">
+            <span id="job-detail-title">Job Details</span>
+            <button class="btn btn-secondary btn-small" onclick="app.closeJobDetail()">✕ Close</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px;">
+            <div id="job-meta-grid"></div>
+            <div id="job-action-panel"></div>
+          </div>
+          <div id="job-progress-section" class="hidden">
+            <label>Restore Progress</label>
+            <div class="progress-container">
+              <div class="progress-bar" id="job-progress-bar" style="width:0%"></div>
+            </div>
+            <div id="job-progress-label" class="text-sm text-muted mt-1">0%</div>
+          </div>
+          <div class="divider"></div>
+          <div class="card-title">Execution Logs</div>
+          <div class="log-viewer" id="job-log-viewer"></div>
+        </div>
+      </section>
+
+      <!-- ══ ALERTS ══════════════════════════════════════════════════════ -->
+      <section id="view-alerts" class="view hidden">
+        <div class="card">
+          <div class="card-header">
+            Space &amp; Health Alerts
+            <div class="flex gap-2 items-center">
+              <select id="alerts-filter" onchange="app.filterAlerts()" style="width:auto;padding:8px 14px;">
+                <option value="">All Alerts</option>
+                <option value="Critical">Critical Only</option>
+                <option value="Warning">Warnings Only</option>
+                <option value="false">Unacknowledged</option>
+              </select>
+              <button class="btn btn-secondary btn-small" onclick="app.loadAlerts()">↺ Refresh</button>
+            </div>
+          </div>
+          <div id="alerts-container"><div class="empty-state"><div class="spinner"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ══ AUDIT LOG ════════════════════════════════════════════════════ -->
+      <section id="view-audit" class="view hidden">
+        <div class="card">
+          <div class="card-header">
+            Audit Log
+            <div class="flex gap-2 items-center">
+              <input type="text" id="audit-search" placeholder="Search by job ID, actor or action…"
+                     style="width:280px;" oninput="app.filterAuditLog()" />
+              <button class="btn btn-secondary btn-small" onclick="app.loadAuditLog()">↺ Refresh</button>
+            </div>
+          </div>
+          <div id="audit-table-container"><div class="empty-state"><div class="spinner"></div></div></div>
+        </div>
+      </section>
+
+      <!-- ══ AI AGENT ═════════════════════════════════════════════════════ -->
+      <section id="view-agent" class="view hidden">
+        <div class="card">
+          <div class="card-header">🤖 AI Agent — Restore Analyzer</div>
+          <p style="color:var(--text-muted);margin-bottom:20px;font-size:13.5px;line-height:1.7;">
+            Describe your restore scenario in plain English. The agent will detect intent, 
+            score governance risk, identify flags, and recommend the appropriate workflow.
+          </p>
+          <div class="agent-query-box">
+            <textarea id="agent-query" rows="4"
+              placeholder="e.g. 'I need to restore OrdersDB from production to UAT for the QA sprint refresh. It's urgent and needs to run immediately…'"
+              style="background:transparent;border:none;padding:0;font-size:14px;resize:none;width:100%;"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="app.runAgentAnalysis()">
+            🔍 &nbsp;Analyze Request
+          </button>
+        </div>
+        <div id="agent-result" class="hidden">
+          <div class="card">
+            <div class="card-header">Analysis Result</div>
+            <div id="agent-result-content"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ SETTINGS ═════════════════════════════════════════════════════ -->
+      <section id="view-settings" class="view hidden">
+        <div class="card">
+          <div class="card-header">Settings</div>
+          <div class="form-group">
+            <label>API Endpoint</label>
+            <input type="text" id="setting-api-url" value="http://localhost:8080" />
+          </div>
+          <div class="form-group">
+            <label>Poll Interval (seconds)</label>
+            <input type="text" id="setting-poll-interval" value="5" />
+          </div>
+          <div class="form-group">
+            <label>Current User Email</label>
+            <input type="email" id="setting-user" value="dba@company.com" />
+          </div>
+          <button class="btn btn-primary" onclick="app.saveSettings()">💾 Save Settings</button>
+        </div>
+        <div class="card">
+          <div class="card-header">About</div>
+          <p class="text-muted">RaaS Framework <span class="highlight">v1.0.0</span> — SQL Restore-as-a-Service Platform</p>
+          <p class="text-muted mt-1">AI-assisted governance · PowerShell orchestration · FastAPI backend</p>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ APPROVAL MODAL ═══════════════════════════════════════════════════════ -->
+<div id="approval-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="card-header" style="margin-bottom:16px;">
+      🔐 Governance Approval
+      <button class="btn btn-secondary btn-small" onclick="app.closeApprovalModal()">✕</button>
+    </div>
+    <div id="approval-job-info" class="mb-2" style="color:var(--text-muted);font-size:13px;line-height:1.7;"></div>
+    <div class="form-group">
+      <label for="approver-name">Your Name / Email</label>
+      <input type="email" id="approver-name" value="dba@company.com" />
+    </div>
+    <div class="form-group">
+      <label for="approval-notes">Notes</label>
+      <textarea id="approval-notes" rows="3" placeholder="Approval comments or rejection reason…"></textarea>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-success" onclick="app.submitApproval(true)">✅ Approve</button>
+      <button class="btn btn-danger" onclick="app.submitApproval(false)">❌ Reject</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  // Live clock in header
+  function updateClock() {
+    const el = document.getElementById('header-clock');
+    if (el) el.textContent = new Date().toUTCString().replace(' GMT','') + ' UTC';
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
