@@ -2,9 +2,8 @@ services:
   - type: web
     name: raas-api
     runtime: python
-    rootDir: agent
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn raas_agent:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r agent/requirements.txt
+    startCommand: cd agent && uvicorn raas_agent:app --host 0.0.0.0 --port $PORT
     plan: free
     envVars:
       - key: PYTHON_VERSION
