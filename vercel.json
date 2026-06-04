@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "raas-framework",
+  "builds": [
+    {
+      "src": "ui/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "ui/$1"
+    }
+  ]
+}
