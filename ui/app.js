@@ -6,7 +6,7 @@
 */
 
 const APP_CONFIG = {
-    apiUrl: localStorage.getItem('raas_api_url') || 'https://raas-api.onrender.com',
+    apiUrl: localStorage.getItem('raas_api_url') || 'https://baishalini.pythonanywhere.com',
     pollInterval: parseInt(localStorage.getItem('raas_poll_interval') || '5') * 1000,
     currentUser: localStorage.getItem('raas_user') || 'dba@company.com',
 };
